@@ -77,7 +77,7 @@ fi
 #install service
 curl --retry 5 --retry-delay 15 -u $USERID:$PASSWD -H "X-Requested-By: ambari" -i -X PUT -d '{"ServiceInfo": {"state" : "INSTALLED"}, "RequestInfo": {"context": "Install Data Analytics Studio"}}' https://$CLUSTERNAME-int.azurehdinsight.net/api/v1/clusters/$CLUSTERNAME/services/DATA_ANALYTICS_STUDIO
 
-sleep 10s
+sleep 120s
 #start DATA ANALYTICS STUDO, retry 3 times if fails
 n=0
 SUCCESSCODE=202
@@ -90,6 +90,7 @@ do
       break
   else
       n=$[$n+1]
+        sleep 10s
   fi
   sleep 30s
 done
