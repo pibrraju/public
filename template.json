@@ -1,0 +1,157 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "clusters_esptest_pib_name": {
+            "defaultValue": "esptest-pib",
+            "type": "String"
+        },
+        "virtualNetworks_VNet_NP_UKS_DevBIPAAS_externalid": {
+            "defaultValue": "/subscriptions/d8082d1c-914b-4ae7-bf75-b0d34cc8546f/resourceGroups/RG-NP-UKS-VNets/providers/Microsoft.Network/virtualNetworks/VNet-NP-UKS-DevBIPAAS",
+            "type": "String"
+        },
+        "domainServices_PIB_AzureDS_com_externalid": {
+            "defaultValue": "/subscriptions/4a97f42e-87e4-4396-a7cf-339b2b858f61/resourceGroups/RG-PD-UKS-InfraUtilities/providers/Microsoft.AAD/domainServices/PIB-AzureDS.com",
+            "type": "String"
+        },
+        "userAssignedIdentities_UAID_PD_UKS_AzureADDSAccess_externalid": {
+            "defaultValue": "/subscriptions/4a97f42e-87e4-4396-a7cf-339b2b858f61/resourceGroups/RG-PD-UKS-InfraUtilities/providers/Microsoft.ManagedIdentity/userAssignedIdentities/UAID-PD-UKS-AzureADDSAccess",
+            "type": "String"
+        },
+        "storageAccounts_sanpuksstddev01_externalid": {
+            "defaultValue": "/subscriptions/d8082d1c-914b-4ae7-bf75-b0d34cc8546f/resourceGroups/RG-NP-UKS-BIDevPAAS/providers/Microsoft.Storage/storageAccounts/sanpuksstddev01",
+            "type": "String"
+        },
+        "userAssignedIdentities_UAID_DevPAAS_externalid": {
+            "defaultValue": "/subscriptions/d8082d1c-914b-4ae7-bf75-b0d34cc8546f/resourceGroups/RG-NP-UKS-Utilities/providers/Microsoft.ManagedIdentity/userAssignedIdentities/UAID-DevPAAS",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.HDInsight/clusters",
+            "apiVersion": "2018-06-01-preview",
+            "name": "[parameters('clusters_esptest_pib_name')]",
+            "location": "Uk South",
+            "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                    "/subscriptions/4a97f42e-87e4-4396-a7cf-339b2b858f61/resourcegroups/rg-pd-uks-infrautilities/providers/microsoft.managedidentity/userassignedidentities/uaid-pd-uks-azureaddsaccess": {
+                        "principalId": "6d9f48a8-6969-4263-9c58-d9b9a3512f13",
+                        "tenantId": "8f0bf071-57ab-4b48-8504-cd24bb511bee"
+                    },
+                    "/subscriptions/d8082d1c-914b-4ae7-bf75-b0d34cc8546f/resourcegroups/rg-np-uks-utilities/providers/microsoft.managedidentity/userassignedidentities/uaid-devpaas": {
+                        "principalId": "ac73fa90-491e-41e2-936b-440f12d0400a",
+                        "tenantId": "8f0bf071-57ab-4b48-8504-cd24bb511bee"
+                    }
+                }
+            },
+            "properties": {
+                "clusterVersion": "4.0.1000.1",
+                "osType": "Linux",
+                "clusterDefinition": {
+                    "blueprint": "https://blueprints.azurehdinsight.net/interactivehive-4.0.1000.1.1910270459.json",
+                    "kind": "INTERACTIVEHIVE",
+                    "componentVersion": {
+                        "InteractiveHive": "3.1"
+                    }
+                },
+                "computeProfile": {
+                    "roles": [
+                        {
+                            "name": "headnode",
+                            "targetInstanceCount": 2,
+                            "hardwareProfile": {
+                                "vmSize": "standard_d13_v2"
+                            },
+                            "osProfile": {
+                                "linuxOperatingSystemProfile": {
+                                    "username": "sshuser"
+                                }
+                            },
+                            "virtualNetworkProfile": {
+                                "id": "[parameters('virtualNetworks_VNet_NP_UKS_DevBIPAAS_externalid')]",
+                                "subnet": "[concat(parameters('virtualNetworks_VNet_NP_UKS_DevBIPAAS_externalid'), '/subnets/SN-NP-UKS-DevBIPAAS')]"
+                            }
+                        },
+                        {
+                            "name": "workernode",
+                            "targetInstanceCount": 1,
+                            "hardwareProfile": {
+                                "vmSize": "standard_d13_v2"
+                            },
+                            "osProfile": {
+                                "linuxOperatingSystemProfile": {
+                                    "username": "sshuser"
+                                }
+                            },
+                            "virtualNetworkProfile": {
+                                "id": "[parameters('virtualNetworks_VNet_NP_UKS_DevBIPAAS_externalid')]",
+                                "subnet": "[concat(parameters('virtualNetworks_VNet_NP_UKS_DevBIPAAS_externalid'), '/subnets/SN-NP-UKS-DevBIPAAS')]"
+                            }
+                        },
+			{
+                            "autoscale": null,
+                            "name": "idbrokernode",
+                            "targetInstanceCount": 1,
+                            "hardwareProfile": {
+                                "vmSize": "Standard_A2_V2"
+                            },
+                            "virtualNetworkProfile": {
+                                "id": "[parameters('virtualNetworks_VNet_NP_UKS_DevBIPAAS_externalid')]",
+                                "subnet": "[concat(parameters('virtualNetworks_VNet_NP_UKS_DevBIPAAS_externalid'), '/subnets/SN-NP-UKS-DevBIPAAS')]"
+                            },
+                            "scriptActions": [],
+                            "dataDisksGroups": null
+                        },
+                        {
+                            "name": "zookeepernode",
+                            "targetInstanceCount": 3,
+                            "hardwareProfile": {
+                                "vmSize": "standard_d1_v2"
+                            },
+                            "osProfile": {
+                                "linuxOperatingSystemProfile": {
+                                    "username": "sshuser"
+                                }
+                            },
+                            "virtualNetworkProfile": {
+                                "id": "[parameters('virtualNetworks_VNet_NP_UKS_DevBIPAAS_externalid')]",
+                                "subnet": "[concat(parameters('virtualNetworks_VNet_NP_UKS_DevBIPAAS_externalid'), '/subnets/SN-NP-UKS-DevBIPAAS')]"
+                            }
+                        }
+                    ]
+                },
+                "securityProfile": {
+                    "directoryType": "ActiveDirectory",
+                    "domain": "PIB-AzureDS.com",
+                    "organizationalUnitDN": "OU=HdiOu4ccf8289c9a5442cb2466619278ff9e2, OU=PartnerTeam, DC=PIB-AzureDS, DC=com",
+                    "ldapsUrls": [
+                        "ldaps://pib-azureds.com:636"
+                    ],
+                    "domainUsername": "daveaadds@pibinsurance.onmicrosoft.com",
+                    "clusterUsersGroupDNs": [
+                        "AAD DC Administrators",
+                        "Azure Dev BI Admins",
+                        "Azure Live BI Admins"
+                    ],
+                    "aaddsResourceId": "[parameters('domainServices_PIB_AzureDS_com_externalid')]",
+                    "msiResourceId": "[parameters('userAssignedIdentities_UAID_PD_UKS_AzureADDSAccess_externalid')]"
+                },
+                "tier": "premium",
+                "storageProfile": {
+                    "storageaccounts": [
+                        {
+                            "name": "sanpuksstddev01.dfs.core.windows.net",
+                            "resourceId": "[parameters('storageAccounts_sanpuksstddev01_externalid')]",
+                            "msiResourceId": "[parameters('userAssignedIdentities_UAID_DevPAAS_externalid')]",
+                            "fileSystem": "[concat(parameters('clusters_esptest_pib_name'), '-2019-12-11t10-50-03-696z')]",
+                            "isDefault": true
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}
